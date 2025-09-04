@@ -1,5 +1,3 @@
-// script.js — wersja dla GitHub Pages (bez File System Access API)
-
 class ProcedureManager {
     constructor() {
         this.procedures = [];
@@ -10,9 +8,11 @@ class ProcedureManager {
     }
 
     init() {
+        this.showLoading(true);
         this.loadDemoData();
         this.setupEventListeners();
         this.renderCategories();
+        this.showLoading(false);
     }
 
     loadDemoData() {
@@ -61,6 +61,7 @@ class ProcedureManager {
         document.getElementById("procedures-list").style.display = "none";
         container.style.display = "grid";
         document.getElementById("btn-back-to-categories").style.display = "none";
+        this.showLoading(false);
     }
 
     renderCategoryProcedures(category) {
@@ -83,6 +84,7 @@ class ProcedureManager {
         document.getElementById("category-list").style.display = "none";
         container.style.display = "grid";
         document.getElementById("btn-back-to-categories").style.display = "block";
+        this.showLoading(false);
     }
 
     renderSearchResults() {
@@ -113,6 +115,7 @@ class ProcedureManager {
         document.getElementById("category-list").style.display = "none";
         container.style.display = "grid";
         document.getElementById("btn-back-to-categories").style.display = "block";
+        this.showLoading(false);
     }
 
     formatFileSize(bytes) {
@@ -120,6 +123,13 @@ class ProcedureManager {
         if (bytes === 0) return "0 B";
         const i = Math.floor(Math.log(bytes) / Math.log(1024));
         return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
+    }
+
+    showLoading(show) {
+        const loadingEl = document.getElementById("loading");
+        if (loadingEl) {
+            loadingEl.style.display = show ? "block" : "none";
+        }
     }
 }
 
