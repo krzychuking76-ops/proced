@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Archiwizacji Procedur</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>System Archiwizacji Procedur</h1>
+        <nav>
+            <button id="btn-dodaj-procedure" class="btn btn-primary">Dodaj Procedurę</button>
+            <button id="btn-dodaj-kategorie" class="btn btn-primary">Dodaj Kategorię</button>
+            <button id="btn-odswież" class="btn btn-secondary">KLIKNIJ przed użyciem</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="controls">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Wyszukaj procedury...">
+                <button id="btn-search" class="btn btn-secondary">Szukaj</button>
+            </div>
+            <div class="filter-container" style="display: none;">
+                <label for="category-filter">Filtruj według kategorii:</label>
+                <select id="category-filter">
+                    <option value="">Wszystkie kategorie</option>
+                </select>
+            </div>
+            <div class="view-toggle">
+                <button id="btn-view-current" class="btn btn-secondary active">Aktualne</button>
+                <button id="btn-view-archive" class="btn btn-secondary">Archiwum</button>
+            </div>
+        </section>
+
+        <section id="procedures-container">
+            <div id="loading" class="loading">Ładowanie procedur...</div>
+            <div id="category-list" class="category-list"></div>
+            <div id="procedures-list" class="procedures-list" style="display: none;"></div>
+            <button id="btn-back-to-categories" class="btn btn-secondary" style="display: none;">Powrót do kategorii</button>
+        </section>
+    </main>
+
+    <!-- Modal do dodawania/aktualizacji procedur -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Dodaj Procedurę</h2>
+            <form id="procedure-form">
+                <div class="form-group">
+                    <label for="procedure-name">Nazwa procedury:</label>
+                    <input type="text" id="procedure-name" placeholder="Nazwa pliku procedury (np. Procedura_BHP)" required>
+                </div>
+                <div class="form-group">
+                    <label for="procedure-file">Wybierz plik główny procedury:</label>
+                    <input type="file" id="procedure-file" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif" required>
+                </div>
+                <div class="form-group">
+                    <label for="procedure-category">Kategoria:</label>
+                    <select id="procedure-category" required>
+                        <option value="">Wybierz kategorię</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="procedure-description">Opis (opcjonalnie):</label>
+                    <textarea id="procedure-description" rows="3" placeholder="Krótki opis procedury..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Załączniki (maks. 3):</label>
+                    <div id="attachments-container" style="display: none;">
+                        <input type="file" id="attachment-file-1" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif">
+                        <input type="file" id="attachment-file-2" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif">
+                        <input type="file" id="attachment-file-3" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif">
+                    </div>
+                    <button type="button" id="btn-add-attachments" class="btn btn-secondary">Dodaj dodatkowe załączniki</button>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Zapisz</button>
+                    <button type="button" id="btn-cancel" class="btn btn-secondary">Anuluj</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal do aktualizacji procedury -->
+    <div id="update-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Aktualizuj Procedurę</h2>
+            <p id="update-info">Wybierz nową wersję pliku. Poprzednia wersja zostanie przeniesiona do archiwum.</p>
+            <form id="update-form">
+                <div class="form-group">
+                    <label for="update-file">Nowa wersja pliku:</label>
+                    <input type="file" id="update-file" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Aktualizuj</button>
+                    <button type="button" id="btn-update-cancel" class="btn btn-secondary">Anuluj</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Nowy Modal do szczegółów procedury -->
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="details-modal-title">Szczegóły Procedury</h2>
+            <form id="details-form">
+                <div class="form-group">
+                    <label for="details-procedure-name">Nazwa pliku:</label>
+                    <input type="text" id="details-procedure-name" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="details-procedure-category">Kategoria:</label>
+                    <input type="text" id="details-procedure-category" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="details-procedure-description">Opis:</label>
+                    <textarea id="details-procedure-description" rows="5"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Załączniki:</label>
+                    <div id="details-attachments-list"></div>
+                    <div id="details-attachments-container" style="display: none;">
+                        <input type="file" id="details-attachment-file-1" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif">
+                        <input type="file" id="details-attachment-file-2" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif">
+                        <input type="file" id="details-attachment-file-3" accept=".doc,.docx,.xls,.xlsx,.txt,.pdf,.jpg,.jpeg,.png,.gif">
+                    </div>
+                    <button type="button" id="btn-details-add-attachments" class="btn btn-secondary">Dodaj dodatkowe załączniki</button>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                    <button type="button" id="btn-details-cancel" class="btn btn-secondary">Anuluj</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal do dodawania nowej kategorii -->
+    <div id="add-category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Dodaj Nową Kategorię</h2>
+            <form id="add-category-form">
+                <div class="form-group">
+                    <label for="new-category-name">Nazwa nowej kategorii (np. 'marketing'):</label>
+                    <input type="text" id="new-category-name" placeholder="Wpisz nazwę kategorii (np. 'marketing')" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-category-display-name">Nazwa wyświetlana (np. 'Dział Marketingu'):</label>
+                    <input type="text" id="new-category-display-name" placeholder="Wpisz nazwę wyświetlaną (np. 'Dział Marketingu')" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Dodaj Kategorię</button>
+                    <button type="button" id="btn-add-category-cancel" class="btn btn-secondary">Anuluj</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
